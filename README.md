@@ -1,1 +1,1 @@
-# compe571_pa1
+# compe571-pa1

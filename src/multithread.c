@@ -59,7 +59,8 @@ int main(void) {
         result += partial_sums[i];
     }
 
-    t1 = clock(); // End timing
+    // End timing
+    t1 = clock(); 
     secs = (double)(t1 - t0) / CLOCKS_PER_SEC;
 
     // Print result and timing

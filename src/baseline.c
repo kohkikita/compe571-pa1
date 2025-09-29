@@ -14,9 +14,9 @@ int main(void) {
     clock_t start, end;
     double cpu_time_used;
 
-    start = clock();          // Start timing
-    int result = sum();       // Call the function
-    end = clock();            // End timing
+    start = clock(); // Start timing
+    int result = sum(); // Call the function
+    end = clock(); // End timing
 
     cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
 

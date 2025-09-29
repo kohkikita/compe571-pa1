@@ -5,35 +5,42 @@
 
 #include "config.h"
 
-// results array allocated in main so we can keep the code tiny
+// Array to hold partial sums from each thread
 static unsigned long long *partial_sums;
 
+// Each thread computes sum of its chunk
 void *thread_sum(void *arg) {
     int id = *(int *)arg;
-
-    unsigned long long chunk = N / NUM_THREADS;
-    unsigned long long start = id * chunk + 1;
-    // last thread takes any remainder
-    unsigned long long end   = (id == NUM_THREADS - 1) ? N : (start + chunk - 1);
+    
+    // Determine the range of numbers this thread will sum
+    unsigned long long start = id * (N / NUM_THREADS) + 1;
+    unsigned long long end = (id == NUM_THREADS - 1) ? N : (start + (N / NUM_THREADS) - 1);
 
     unsigned long long total = 0;
-    for (unsigned long long i = start; i <= end; i++) total += i;
-
+    for (unsigned long long i = start; i <= end; i++) {
+        total += i;
+    }
     partial_sums[id] = total;
     return NULL;
 }
 
 int main(void) {
-    clock_t start_t, end_t;
-    double cpu_time_used;
+    // Timing variables
+    clock_t t0, t1;
+    double secs;
 
+    // Thread handles and IDs
     pthread_t threads[NUM_THREADS];
     int ids[NUM_THREADS];
 
-    partial_sums = (unsigned long long *)malloc(sizeof(unsigned long long) * NUM_THREADS);
-    if (!partial_sums) { perror("malloc"); return 1; }
+    // Allocate array for partial sums
+    partial_sums = malloc(sizeof(unsigned long long) * NUM_THREADS);
+    if (!partial_sums) {
+        perror("malloc");
+        return 1;
+    }
 
-    start_t = clock();  // Start timing
+    t0 = clock(); // Start timing
 
     // Create threads
     for (int i = 0; i < NUM_THREADS; i++) {
@@ -41,20 +48,23 @@ int main(void) {
         pthread_create(&threads[i], NULL, thread_sum, &ids[i]);
     }
 
-    // Wait for all threads
+    // Wait for all threads to finish
     for (int i = 0; i < NUM_THREADS; i++) {
         pthread_join(threads[i], NULL);
     }
 
-    // Combine results
+    // Add up all partial sums
     unsigned long long result = 0;
-    for (int i = 0; i < NUM_THREADS; i++) result += partial_sums[i];
+    for (int i = 0; i < NUM_THREADS; i++) {
+        result += partial_sums[i];
+    }
 
-    end_t = clock();  // End timing
-    cpu_time_used = ((double)(end_t - start_t)) / CLOCKS_PER_SEC;
+    t1 = clock(); // End timing
+    secs = (double)(t1 - t0) / CLOCKS_PER_SEC;
 
+    // Print result and timing
     printf("Sum = %llu\n", result);
-    printf("Time taken: %f seconds\n", cpu_time_used);
+    printf("Time taken: %f seconds\n", secs);
 
     free(partial_sums);
     return 0;
